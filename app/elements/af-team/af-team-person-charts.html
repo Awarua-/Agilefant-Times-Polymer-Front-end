@@ -1,0 +1,242 @@
+<dom-module id="af-team-person-charts">
+  <style include="custom-style"></style>
+  <style>
+    :host {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    #lineChart {
+      display: none;
+    }
+
+    #loginButton {
+      display: none;
+    }
+
+    #errorMessage {
+      display: none;
+    }
+
+    #legend {
+      display: none;
+    }
+
+  </style>
+  <template>
+    <iron-ajax id="ajax"
+               url="{{_generatePersonChartUrl(personId, sprintId)}}"
+               handle-as="json"
+               on-response="handlePersonChartResponse"
+               on-error="handleError"></iron-ajax>
+
+    <paper-material id="container" elevation="1" class="layout center vertical">
+      <p id="errorMessage" class="paper-font-title">[[errorMessage]]</p>
+      <paper-button id="loginButton" raised on-click="handleClick">Login</paper-button>
+      <chart-line id="lineChart"
+                 width="0"
+                 height="0"
+                 labels="{{chartLabels}}"
+                 values="{{chartData}}"
+                 colors="{{colours}}"
+                  legend>
+      </chart-line>
+      <div id="legend"></div>
+    </paper-material>
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'af-team-person-charts',
+
+        properties: {
+          teamData: {
+            type: Object,
+            notify: false
+          },
+          sprintId: {
+            type: Number,
+            notify: false,
+            observer: '_updateData'
+          },
+          teamId: {
+            type: Number,
+            notify: false,
+            observer: '_updateData'
+          },
+          personId: {
+            type: String,
+            notify: false
+          },
+          currentPersonData: {
+            type: Object,
+            notify: false
+          },
+          route: {
+            type: String,
+            notify: true,
+            observer: '_updateData'
+          },
+          chartData: {
+            type: Array
+          },
+          chartLabels: {
+            type: Array,
+            value: function () {
+              return [];
+            }
+          },
+          errorMessage: String,
+          colours: {
+            type: Array,
+            value: function() {
+              return ["253,180,92",
+              "247,70,74",
+                "70,191,189",
+                "148,159,177",
+                "77,83,96",
+                "50,210,100"];
+            }
+          },
+          responseCount: Number
+        },
+
+        _generatePersonChartUrl: function(personId, sprintId) {
+          if (sprintId == null || personId == null || this.route != 'team') {
+            return '';
+          }
+          var computedSprintId = parseInt(sprintId) + 1;
+          return 'http://times.sws.nz/rest/' + personId + '/sprint/'+ computedSprintId;
+        },
+
+        handlePersonChartResponse: function(event, detail) {
+          if (this.route != 'person') {
+            var data = detail.response;
+            var personIndex = this._getPersonIndex(data.UserCode);
+            this.responseCount++;
+            if (this.responseCount == this.teamData[this.teamId - 1].Members.length) {
+              this._drawChartLine(data, personIndex, this.showChart.bind(this));
+            }
+            else {
+              this._drawChartLine(data, personIndex, null);
+            }
+          }
+        },
+
+        handleError: function(event, detail) {
+          if (detail.request.xhr.status = 503) {
+            if (this.route == 'team') {
+              var app = document.querySelector('#app');
+              app.dispatchEvent(app.teamEndLoadingEvent);
+            }
+            this._showAccessError();
+          }
+        },
+
+        _showAccessError: function(){
+          this.errorMessage = "You do not have permission to access this data. If you are a member of this team you can login below";
+          this.$.errorMessage.style.display = 'inline';
+          this.$.loginButton.style.display = 'inline';
+        },
+
+        handleClick: function() {
+          this.route = 'login';
+        },
+
+        _getPersonIndex: function(userCode) {
+          var team = this.teamData[this.teamId - 1];
+          for(var i = 0; i < team.Members.length; i++) {
+            if (team.Members[i].initials == userCode) {
+              return i;
+            }
+          }
+        },
+
+        _getPersonName: function(personIndex) {
+          return this.teamData[this.teamId - 1].Members[personIndex].Name;
+        },
+
+        /**
+         * Rounds a number to 1dp or less.
+         * @param number number to round.
+         * @returns number rounded to 1dp or less.
+         */
+        _roundup1dp: function(number) {
+          return +(Math.round(number + "e+1") + "e-1");
+        },
+
+        _drawChartLine: function(data, personIndex, callback) {
+          this.async(function () {
+          if (data != null) {
+            var currentData;
+            if (this.chartLabels[0] != this._getDay(0)) {
+              for (var i = 0; i < data.DailyHours.length; i++) {
+                this.chartLabels[i] = this._getDay(i);
+              }
+            }
+            this.chartData[personIndex].seriesLabel = this._getPersonName(personIndex);
+            for (var j = 0; j < data.DailyHours.length; j++) {
+              currentData = this._roundup1dp(data.DailyHours[j]);
+              this.chartData[personIndex].data[j] = currentData;
+            }
+            if (callback != null) {
+              callback();
+            }
+          }
+          }, null, 0);
+        },
+
+        showChart: function() {
+          this.$.lineChart.width = 900;
+          this.$.lineChart.height = 300;
+          this.$.lineChart.style.display = "inline";
+          this.$.legend.style.display = "inline";
+          this.$.lineChart.updateChart();
+          if (this.route == 'team') {
+            var app = document.querySelector('#app');
+            app.dispatchEvent(app.teamEndLoadingEvent);
+          }
+        },
+
+        _updateData: function(newValue, oldValue) {
+          if (this.teamData != null && this.route == 'team') {
+            this.chartLabels = [];
+            this.clearChartData();
+            this.responseCount = 0;
+            this.$.lineChart.width = 0;
+            this.$.lineChart.height = 0;
+            this.$.lineChart.style.display = "none";
+            this.$.legend.style.display = "none";
+            this.$.loginButton.style.display = "none";
+            this.$.errorMessage.style.display = "none";
+            var team = this.teamData[this.teamId - 1];
+
+            for (var i = 0; i < team.Members.length; i++) {
+              this.personId = team.Members[i].initials;
+              this.$.ajax.generateRequest();
+            }
+          }
+        },
+
+        clearChartData: function () {
+          this.chartData = [];
+          for (var i = 0; i < this.teamData[this.teamId -1].Members.length; i++) {
+            this.chartData.push({"seriesLabel":"", "data":[]});
+          }
+        },
+
+        _getDay: function(index) {
+          var date = new Date(this.teamData[this.teamId - 1].Sprints[this.sprintId].StartDate);
+          date.setDate(date.getDate() + index + 1);
+          var day = date.getDate();
+          var month = date.getMonth() + 1;
+          var year = date.getFullYear();
+          return day + '/' + month + '/' + year;
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

@@ -1,0 +1,214 @@
+<dom-module id="af-person">
+  <style include="custom-style"></style>
+  <style>
+    :host {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    table {
+      border: none;
+      outline: none;
+      text-align: center;
+      display: block;
+      border-collapse: collapse;
+    }
+    thead {
+      font-weight: lighter;
+      background-color: #03A9F4;
+      color: white;
+    }
+    th {
+      width: 200px;
+      padding: 5px;
+    }
+    td {
+      text-align: right;
+      padding: 5px;
+      width: 200px;
+      border-left: 1px solid #9c9c9c;
+    }
+    .text {
+      text-align: left;
+      border-left: 0 none;
+    }
+    .stats {
+      text-align: center;
+    }
+    .first {
+      border-left: 0 none;
+    }
+
+    #container {
+      display:none;
+    }
+  </style>
+  <template>
+
+    <div id="container">
+    <paper-material elevation="1" class="layout center vertical">
+      <chart-line id="chart"
+                 width="900"
+                 height="300"
+                 labels="{{chartLabels}}"
+                 values="{{chartData}}"
+                 colors='["3, 169, 244"]'>
+      </chart-line>
+      <table>
+        <thead>
+        <tr>
+          <th>Total Hours</th>
+          <th>Average hours per day</th>
+          <th>Longest Day</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td id="total" class="stats first">[[_roundup1dp(personData.TotalHours)]]</td>
+          <td id="avg" class="stats">[[_roundup1dp(personData.AverageHours)]]</td>
+          <td id="long" class="stats"></td>
+        </tr>
+        </tbody>
+      </table>
+    </paper-material>
+
+    <paper-material elevation="1" class="layout center vertical">
+      <table>
+        <thead>
+        <tr>
+          <th>Person</th>
+          <th>Pair programmed hours</th>
+        </tr>
+        </thead>
+        <tbody>
+        <template is="dom-repeat" items="{{_toArray(personData.ProgrammedWithHours)}}">
+          <tr>
+            <td class="text">{{item.name}}</td>
+            <td>{{_roundup1dp(item.value)}}</td>
+          </tr>
+        </template>
+        </tbody>
+      </table>
+    </paper-material>
+
+    <paper-material elevation="1" class="layout center vertical">
+      <table>
+        <thead>
+        <tr>
+          <th>#Implement hours</th>
+          <th>#Refactor hours</th>
+          <th>#Test hours</th>
+          <th>#Testmanual hours</th>
+          <th>#Document hours</th>
+          <th>#Chore hours</th>
+          <th>#Pair hours</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td class="stats first">[[_roundup1dp(personData.PerformedTasks.implement)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.refactor)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.test)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.testmanual)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.document)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.chore)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.pair)]]</td>
+        </tr>
+        </tbody>
+      </table>
+    </paper-material>
+  </div>
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'af-person',
+
+        properties: {
+          personData: {
+            type: Object,
+            notify: false,
+            observer: '_updateData'
+          },
+          sprintId: {
+            type: String
+          },
+          teamId: {
+            type: String
+          },
+          teamsData: {
+            type: Array
+          },
+          chartData: {
+            type: Array,
+            value: function() {
+              return [
+                {"seriesLabel":"", "data": []}
+              ];
+            }
+          },
+          chartLabels: {
+            type: Array,
+            value: function () {
+              return [];
+            }
+          }
+        },
+
+        _toArray: function(obj) {
+          return Object.keys(obj).map(function(key) {
+            return {name: key, value: obj[key]};
+          });
+        },
+
+        /**
+         * Rounds a number to 1dp or less.
+         * @param number number to round.
+         * @returns number rounded to 1dp or less.
+         */
+        _roundup1dp: function(number) {
+          return +(Math.round(number + "e+1") + "e-1");
+        },
+
+        _updateData: function(newValue, oldValue) {
+          if (this.personData != null) {
+            this.clearChartData();
+            this.chartLabels = [];
+            var longestDayDate;
+            var currentData;
+            for (var i = 0; i < this.personData.DailyHours.length; i++) {
+              currentData = this.personData.DailyHours[i];
+              if (currentData == this.personData.LongestDay) {
+                longestDayDate = this._getDay(i);
+              }
+              this.chartData[0].data[i] = currentData;
+              this.chartLabels[i] = this._getDay(i);
+            }
+            this.$.long.innerHTML = this._roundup1dp(this.personData.LongestDay) + ' (' + longestDayDate + ')';
+            this.$.chart.updateChart();
+          }
+        },
+
+        clearChartData: function () {
+          this.chartData = [];
+          this.chartData.push({"seriesLabel":"", "data":[]});
+        },
+
+        _getDay: function(index) {
+          var date = new Date(this.teamsData[this.teamId - 1].Sprints[this.sprintId].StartDate);
+          date.setDate(date.getDate() + index + 1);
+          var day = date.getDate();
+          var month = date.getMonth() + 1;
+          var year = date.getFullYear();
+          return day + '/' + month + '/' + year;
+        },
+
+        show: function() {
+          this.$.container.style.display = 'inline';
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

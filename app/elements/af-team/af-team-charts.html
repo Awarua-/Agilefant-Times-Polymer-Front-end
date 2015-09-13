@@ -1,0 +1,94 @@
+<dom-module id="af-team-charts">
+  <style include="custom-style"></style>
+  <style>
+    :host {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+  </style>
+  <template id="charts">
+    <paper-material elevation="1" class="layout center vertical">
+      <chart-bar id="chart"
+                  width="900"
+                  height="300"
+                  labels="{{chartLabels}}"
+                  values="{{chartData}}"
+                 colors='["3, 169, 244"]'>
+      </chart-bar>
+      <chart-radar
+        id="chartR"
+        width="450"
+        height="450"
+        labels="{{chartLabels}}"
+        values="{{chartData}}"
+        colors='["3, 169, 244"]'>
+      </chart-radar>
+    </paper-material>
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'af-team-charts',
+
+        properties: {
+          teamData: {
+            type: Object,
+            notify: false,
+            observer: '_updateData'
+          },
+          chartData: {
+            type: Array,
+            value: function() {
+              return [
+                []
+              ];
+            }
+          },
+          chartLabels: {
+            type: Array,
+            value: function () {
+              return [];
+            }
+          },
+          route: {
+            type: String,
+            notify: false,
+            observer: '_updateCharts'
+          }
+        },
+
+        /**
+         * Rounds a number to 1dp or less.
+         * @param number number to round.
+         * @returns number rounded to 1dp or less.
+         */
+        _roundup1dp: function(number) {
+          return +(Math.round(number + "e+1") + "e-1");
+        },
+
+        _updateData: function(newValue, oldValue) {
+          if (this.teamData != null) {
+            for (var i = 0; i < this.teamData.Hours.length; i++) {
+              if (this.chartLabels[i] != this.teamData.Hours[i].Name) {
+                this.chartLabels[i] = this.teamData.Hours[i].Name;
+              }
+              this.chartData[0][i] = this._roundup1dp(this.teamData.Hours[i].TotalHours);
+            }
+            this._updateCharts();
+          }
+        },
+
+        _updateCharts: function() {
+          if (this.route == 'team') {
+            this.$.chart.updateChart();
+            this.$.chartR.updateChart();
+          }
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

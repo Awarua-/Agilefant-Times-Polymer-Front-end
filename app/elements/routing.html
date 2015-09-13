@@ -10,26 +10,38 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 <script src="../../bower_components/page/page.js"></script>
 <script>
+
   window.addEventListener('WebComponentsReady', function() {
 
     // We use Page.js for routing. This is a Micro
     // client-side router inspired by the Express router
     // More info: https://visionmedia.github.io/page.js/
     page('/', function () {
-      app.route = 'home';
+      app.route = 'team';
+    });;
+
+    page('/team/:id', function (data) {
+      app.teamId = data.params.id;
+      app.route = 'team';
+      app.dispatchEvent(app.teamBeginLoadingEvent);
     });
 
-    page('/users', function () {
-      app.route = 'users';
+    page('/team' , function() {
+      app.route = 'team';
     });
 
-    page('/users/:name', function (data) {
-      app.route = 'user-info';
-      app.params = data.params;
+    page('/person', function() {
+      app.route = 'person';
     });
 
-    page('/contact', function () {
-      app.route = 'contact';
+    page('/person/:id', function(data) {
+      app.personId = data.params.id;
+      app.route = 'person';
+      app.dispatchEvent(app.personBeginLoadingEvent);
+    });
+
+    page('/login', function() {
+      app.route = 'login';
     });
 
     // add #! before urls

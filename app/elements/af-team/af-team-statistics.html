@@ -1,0 +1,128 @@
+<dom-module id="af-team-statistics">
+  <style include="custom-style"></style>
+  <style>
+    :host {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    table {
+      border: none;
+      outline: none;
+      text-align: center;
+      display: block;
+      border-collapse: collapse;
+    }
+    thead {
+      font-weight: lighter;
+      background-color: #03A9F4;
+      color: white;
+    }
+    th {
+      width: 200px;
+      padding: 5px;
+    }
+    td {
+      text-align: right;
+      padding: 5px;
+      width: 200px;
+      border-left: 1px solid #9c9c9c;
+    }
+    .text {
+      text-align: left;
+      border-left: 0 none;
+    }
+    .stats {
+      text-align: center;
+    }
+    .first {
+      border-left: 0 none;
+    }
+  </style>
+<template>
+
+  <paper-material elevation="1" class="layout center vertical">
+    <table>
+      <thead>
+      <tr>
+        <th>Person</th>
+        <th>Task Hours</th>
+        <th>Story Hours</th>
+        <th>Total Hours</th>
+      </tr>
+      </thead>
+      <tbody>
+      <template is="dom-repeat" items="{{teamData.Hours}}">
+        <tr>
+          <td class="text">{{item.Name}}</td>
+          <td>{{_roundup1dp(item.TaskHours)}}</td>
+          <td>{{_roundup1dp(item.StoryHours)}}</td>
+          <td>{{_roundup1dp(item.TotalHours)}}</td>
+        </tr>
+      </template>
+      </tbody>
+    </table>
+    <br>
+    <table id="statsTable">
+      <thead>
+      <tr>
+        <th>Average</th>
+        <th>Minimum</th>
+        <th>Median</th>
+        <th>Maximum</th>
+        <th>Total</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td id="mean" class="stats first"></td>
+        <td id="min" class="stats"></td>
+        <td id="median" class="stats"></td>
+        <td id="max" class="stats"></td>
+        <td id="total" class="stats"></td>
+      </tr>
+      </tbody>
+    </table>
+  </paper-material>
+
+</template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'af-team-statistics',
+
+        properties: {
+          teamData: {
+            type: Object,
+            notify: false,
+            observer: '_updateData'
+          }
+        },
+
+        /**
+         * Rounds a number to 1dp or less.
+         * @param number number to round.
+         * @returns number rounded to 1dp or less.
+         */
+        _roundup1dp: function(number) {
+          return +(Math.round(number + "e+1") + "e-1");
+        },
+
+        _updateData: function(newValue, oldValue) {
+          if (this.teamData != null) {
+            var maxPerson = this.teamData.Hours[this.teamData.MaxHours];
+            var minPerson = this.teamData.Hours[this.teamData.MinHours];
+            var medianPerson = this.teamData.Hours[this.teamData.MedianUpperHours];
+            this.$.min.innerHTML = this._roundup1dp(minPerson.TotalHours) + " (" + minPerson.Name + ")";
+            this.$.max.innerHTML = this._roundup1dp(maxPerson.TotalHours) + " (" + maxPerson.Name + ")";
+            this.$.median.innerHTML = this._roundup1dp(medianPerson.TotalHours) + " (" + medianPerson.Name + ")";
+            this.$.mean.innerHTML = this._roundup1dp(this.teamData.AverageHours);
+            this.$.total.innerHTML = this._roundup1dp(this.teamData.TotalHours);
+          }
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

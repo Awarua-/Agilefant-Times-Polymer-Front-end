@@ -1,0 +1,103 @@
+<dom-module id="af-drawer">
+  <style include="custom-style"></style>
+  <style>
+    :host {
+      display: block;
+    }
+   .menuContentSpacing {
+     max-width: 25%;
+   }
+
+  .selectable {
+    cursor: pointer;
+  }
+  </style>
+  <template>
+
+    <!-- Drawer Toolbar -->
+    <paper-toolbar id="drawerToolbar">
+      <span class="paper-font-title">Select a Team or Person</span>
+    </paper-toolbar>
+
+    <!-- Drawer Content -->
+    <paper-menu class="list" attr-for-selected="data-route" selected="[[route]]">
+      <template is="dom-repeat" items="{{teams}}" as="team">
+        <paper-submenu attr-for-selected="data-route" selected="[[route]]">
+          <paper-icon-item></paper-icon-item>
+          <paper-item class="menu-trigger">
+            <a data-route="team" href="{{setTeamRoute('team/', team.Id)}}">
+              <iron-icon icon="social:group"></iron-icon>
+            </a>
+            <span class="selectable">[[team.Name]]</span>
+          </paper-item>
+          <paper-menu class="menu-content">
+            <template is="dom-repeat" items="{{team.Members}}" as="person">
+              <a data-route="person" on-click='setTeam' href="{{setPersonRoute('person/', person.initials)}}">
+                <span class="flex menuContentSpacing"></span>
+                <iron-icon icon="social:person"></iron-icon>
+                <span class="selectable">[[person.Name]]</span>
+              </a>
+            </template>
+          </paper-menu>
+        </paper-submenu>
+      </template>
+    </paper-menu>
+
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'af-drawer',
+
+        properties: {
+          teams: {
+            type: Array,
+            notify: true
+          },
+          personId: {
+            type: String,
+            notify: true
+          },
+          teamId: {
+            type: String,
+            notify: true
+          },
+          lastPersonId: {
+            type:String
+          }
+        },
+        setTeamRoute: function(url, param) {
+          return url + param;
+        },
+        setPersonRoute: function(url, param) {
+          return url + param;
+        },
+        ready: function() {
+          this.lastPersonId = this.personId;
+        },
+        setTeam: function() {
+          //This is meant to prevent the loading bar endlessly showing when selecting the same person after selecting
+          // a team in between. unfortunately it doesn't work.
+          if (this.personId == this.lastPersonId || this.lastPersonId == null) {
+            var app = document.querySelector("#app");
+            app.dispatchEvent(app.personEndLoadingEvent);
+          }
+          this.lastPersonId = this.personId;
+          //Could be doing some functional programming magic here, but its late and I don't really care atm.
+          for (var i = 0; i < this.teams.length; i++) {
+            for (var j = 0; j < this.teams[i].Members.length; j++) {
+              if (this.teams[i].Members[j].initials == this.personId) {
+                if (this.teamId != this.teams[i].Id) {
+                  this.teamId = this.teams[i].Id;
+                }
+                break;
+              }
+            }
+          }
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

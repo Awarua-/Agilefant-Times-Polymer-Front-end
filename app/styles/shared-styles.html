@@ -1,0 +1,31 @@
+<link rel="import" href="app-theme.html">
+<dom-module id="shared-styles">
+  <style include="custom-style"></style>
+  <template>
+    <style>
+      .page-title {
+        @apply(--paper-font-display2);
+      }
+
+      @media (max-width: 600px) {
+        .page-title {
+          font-size: 24px!important;
+        }
+      }
+
+      paper-toolbar {
+        background-color: var(--default-primary-color);
+      }
+
+      #progress {
+        overflow: inherit;
+        width: 100%;
+        --paper-progress-active-color: var(--loading-color);
+      }
+
+      .warning {
+        color: var(--error-color);
+      }
+    </style>
+  </template>
+</dom-module>

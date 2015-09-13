@@ -1,0 +1,68 @@
+<dom-module id="af-toolbar">
+  <style include="custom-style"></style>
+  <style>
+    :host {
+      display: block;
+    }
+    #af-toolbar {
+      @apply(--layout-horizontal)
+    }
+    paper-tabs {
+      box-shadow: none;
+      @apply(--layout-flex)
+    }
+    paper-tabs[noink][no-bar] paper-tab.iron-selected {
+      color: #ffff8d;
+    }
+    paper-tab {
+      text-align: center;
+      white-space: pre-wrap;
+      text-transform: uppercase;
+    }
+    paper-tabs[align-bottom] {
+      box-shadow: 0px -2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+  </style>
+  <template>
+
+      <paper-tabs selected="{{sprintId}}">
+        <template is="dom-repeat" items="{{computeTabs(data, team)}}">
+          <paper-tab>[[item.Name]]</paper-tab>
+        </template>
+      </paper-tabs>
+
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'af-toolbar',
+
+        properties: {
+          data: {
+            type: Object,
+            notify: true
+          },
+          sprintId: {
+            type: String,
+            notify: true,
+            observer: 'sprintChanged'
+          },
+          team: {
+            type: String,
+            notify: false
+          }
+        },
+        computeTabs: function(data, team) {
+          return data[team - 1].Sprints;
+        },
+        sprintChanged: function(event) {
+          var app = document.querySelector('#app');
+          app.dispatchEvent(app.sprintChangedEvent);
+        }
+      });
+    })();
+  </script>
+
+</dom-module>

@@ -1,0 +1,77 @@
+<dom-module id="af-login">
+  <style include="custom-style"></style>
+  <style include="shared-styles"></style>
+  <style>
+    :host {
+
+    }
+
+  </style>
+  <template>
+
+    <paper-material elevation="1" class="layout center">
+      <p class="paper-font-headline">Opps looks like you don't have access to this data</p>
+      <p class="paper-font-subhead">Login using your Agilefant credentials</p>
+      <form id="form" is="iron-form" method="post" action="http://times.sws.nz/rest/login" on-iron-form-response="_handleResponse" on-iron-form-error="_handleError">
+        <p class="warning paper-font-body1">[[errorMessage]]</p>
+        <paper-input id="userNameInput" type="text" name="username" label="UserCode"></paper-input>
+        <paper-input id="passwordInput" type="password" name="password" label="Password"></paper-input>
+        <p class="warning paper-font-body1">We do not store this information permanently.
+          It is only used to get a login token which is stored by your browser</p>
+        <paper-button raised type="submit" on-click="_clickHandler">Login</paper-button>
+      </form>
+    </paper-material>
+  </template>
+
+  <script>
+    (function() {
+      Polymer({
+        is: 'af-login',
+
+        properties: {
+          personData: {
+            type: Object,
+            notify: true
+          },
+          personId: {
+            type: Number,
+            notify: false
+          },
+          sprintId: {
+            type: Number,
+            notify: false
+          },
+          errorMessage: String
+        },
+
+        ready: function() {
+          this._clearFields();
+        },
+        _clickHandler: function() {
+          this.$.form.submit();
+          this._clearFields();
+        },
+        _handleResponse: function(event, detail) {
+          document.querySelector("#personAjax").generateRequest();
+        },
+        _handleError: function(event, detail) {
+          if (detail.request.xhr.status == 401) {
+            this._showError("usercode or password was incorrect, try again");
+          }
+          else {
+            this._showError("Something went wrong, try again later");
+          }
+        },
+        _showError: function(message) {
+          this.errorMessage = message;
+        },
+        _clearFields: function() {
+          this.$.userNameInput.value = '';
+          this.$.passwordInput.value = '';
+          this.errorMessage = '';
+        }
+      });
+    })();
+  </script>
+
+</dom-module>
