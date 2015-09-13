@@ -1,6 +1,6 @@
 ## Agilefant Times front end
 
-> A front end for the [AgilefantTimes](https://github.com/mrkno/AgilefantTimes) repository. 
+A front end for the [AgilefantTimes](https://github.com/mrkno/AgilefantTimes) repository. 
 Built using Polymer 1.0
 
 This project is based on the [Polymer starter kit](https://github.com/PolymerElements/polymer-starter-kit)
@@ -61,8 +61,6 @@ This installs the element sets (Paper, Iron, Platinum) and tools the agilefant t
 ```sh
 gulp serve
 ```
-
-This runs the unit tests defined in the `app/test` directory through [web-component-tester](https://github.com/Polymer/web-component-tester).
 
 #### Build & Vulcanize
 
