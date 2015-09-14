@@ -141,19 +141,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     <!-- Uncomment next block to enable Service Worker support (1/2) -->
 
-    <paper-toast id="caching-complete"
-                 duration="6000"
-                 text="Caching complete! This app will work offline.">
-    </paper-toast>
+    <!--<paper-toast id="caching-complete"-->
+                 <!--duration="6000"-->
+                 <!--text="Caching complete! This app will work offline.">-->
+    <!--</paper-toast>-->
 
-    <platinum-sw-register auto-register
-                          clients-claim
-                          skip-waiting
-                          on-service-worker-installed="displayInstalledToast">
-      <platinum-sw-cache default-cache-strategy="fastest"
-                         cache-config-file="cache-config.json">
-      </platinum-sw-cache>
-    </platinum-sw-register>
+    <!--<platinum-sw-register auto-register-->
+                          <!--clients-claim-->
+                          <!--skip-waiting-->
+                          <!--on-service-worker-installed="displayInstalledToast">-->
+      <!--<platinum-sw-cache default-cache-strategy="fastest"-->
+                         <!--cache-config-file="cache-config.json">-->
+      <!--</platinum-sw-cache>-->
+    <!--</platinum-sw-register>-->
 
 
   </template>
@@ -270,11 +270,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         document.querySelector("#personView").show();
       }
       if (app.route == 'login') {
-        console.log(window.location.href);
-        if (window.location.href.indexof('person') > -1) {
+        if (window.location.href.indexOf('person') > -1) {
           app.route = 'person';
+          document.querySelector("#personView").show();
         }
-        else if (window.location.href.indexof('team') > -1) {
+        else if (window.location.href.indexOf('team') > -1) {
           app.route = 'team';
         }
       }
