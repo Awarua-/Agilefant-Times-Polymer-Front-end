@@ -97,22 +97,26 @@
         <tr>
           <th>#Implement hours</th>
           <th>#Refactor hours</th>
+          <th>#Fix hours</th>
           <th>#Test hours</th>
           <th>#Testmanual hours</th>
           <th>#Document hours</th>
           <th>#Chore hours</th>
           <th>#Pair hours</th>
+          <th>Hours without a tag</th>
         </tr>
         </thead>
         <tbody>
         <tr>
           <td class="stats first">[[_roundup1dp(personData.PerformedTasks.implement)]]</td>
           <td class="stats">[[_roundup1dp(personData.PerformedTasks.refactor)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.fix)]]</td>
           <td class="stats">[[_roundup1dp(personData.PerformedTasks.test)]]</td>
           <td class="stats">[[_roundup1dp(personData.PerformedTasks.testmanual)]]</td>
           <td class="stats">[[_roundup1dp(personData.PerformedTasks.document)]]</td>
           <td class="stats">[[_roundup1dp(personData.PerformedTasks.chore)]]</td>
           <td class="stats">[[_roundup1dp(personData.PerformedTasks.pair)]]</td>
+          <td class="stats">[[_roundup1dp(personData.PerformedTasks.unspecified)]]</td>
         </tr>
         </tbody>
       </table>
@@ -135,7 +139,8 @@
             type: String
           },
           teamId: {
-            type: String
+            type: String,
+            notify: true
           },
           teamsData: {
             type: Array
@@ -144,9 +149,12 @@
             type: Array,
             value: function() {
               return [
+                /* jshint ignore:start */
                 {"seriesLabel":"", "data": []}
+                /* jshint ignore:end */
               ];
             }
+
           },
           chartLabels: {
             type: Array,
@@ -168,22 +176,51 @@
          * @returns number rounded to 1dp or less.
          */
         _roundup1dp: function(number) {
-          return +(Math.round(number + "e+1") + "e-1");
+          return +(Math.round(number + 'e+1') + 'e-1');
         },
 
-        _updateData: function(newValue, oldValue) {
-          if (this.personData != null) {
+        _getTeamId: function(){
+          for (var i = 0; i < this.teamsData.length; i++) {
+            for (var j = 0; j < this.teamsData[i].Members.length; j++) {
+              if (this.personData.UserCode === this.teamsData[i].Members[j].initials) {
+                this.teamId = this.teamsData[i].Id;
+                return;
+              }
+            }
+          }
+        },
+
+        _updateData: function() {
+          if (this.personData !== null) {
+            this._getTeamId();
             this.clearChartData();
             this.chartLabels = [];
             var longestDayDate;
             var currentData;
-            for (var i = 0; i < this.personData.DailyHours.length; i++) {
+
+            // Offset the start date of taking data from the persons daily hours array.
+            // This is because sometimes Agilefant will return data from previous sprints.
+            var sprintEndDate = new Date(this.teamsData[this.teamId - 1].Sprints[this.sprintId].EndDate);
+            var today = new Date();
+            var adjustedEndDate;
+            if (sprintEndDate > today) {
+              adjustedEndDate = today;
+            }
+            else {
+              adjustedEndDate = sprintEndDate;
+            }
+
+            var sprintStartDate = new Date(this.teamsData[this.teamId - 1].Sprints[this.sprintId].StartDate);
+            var currentNumberOfSprintDays = Math.round((adjustedEndDate - sprintStartDate) / (1000 * 60 * 60 * 24));
+            var dataOffset = currentNumberOfSprintDays - (this.personData.DailyHours.length - 1);
+
+            for (var i = dataOffset; i < this.personData.DailyHours.length; i++) {
               currentData = this.personData.DailyHours[i];
-              if (currentData == this.personData.LongestDay) {
+              if (currentData === this.personData.LongestDay) {
                 longestDayDate = this._getDay(i);
               }
-              this.chartData[0].data[i] = currentData;
-              this.chartLabels[i] = this._getDay(i);
+              this.chartData[0].data[i -dataOffset] = this._roundup1dp(currentData);
+              this.chartLabels[i - dataOffset] = this._getDay(i);
             }
             this.$.long.innerHTML = this._roundup1dp(this.personData.LongestDay) + ' (' + longestDayDate + ')';
             this.$.chart.updateChart();
@@ -192,7 +229,9 @@
 
         clearChartData: function () {
           this.chartData = [];
+          /* jshint ignore:start */
           this.chartData.push({"seriesLabel":"", "data":[]});
+          /* jshint ignore:end */
         },
 
         _getDay: function(index) {

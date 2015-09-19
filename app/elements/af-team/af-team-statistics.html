@@ -106,17 +106,17 @@
          * @returns number rounded to 1dp or less.
          */
         _roundup1dp: function(number) {
-          return +(Math.round(number + "e+1") + "e-1");
+          return +(Math.round(number + 'e+1') + 'e-1');
         },
 
-        _updateData: function(newValue, oldValue) {
-          if (this.teamData != null) {
+        _updateData: function() {
+          if (this.teamData !== null) {
             var maxPerson = this.teamData.Hours[this.teamData.MaxHours];
             var minPerson = this.teamData.Hours[this.teamData.MinHours];
             var medianPerson = this.teamData.Hours[this.teamData.MedianUpperHours];
-            this.$.min.innerHTML = this._roundup1dp(minPerson.TotalHours) + " (" + minPerson.Name + ")";
-            this.$.max.innerHTML = this._roundup1dp(maxPerson.TotalHours) + " (" + maxPerson.Name + ")";
-            this.$.median.innerHTML = this._roundup1dp(medianPerson.TotalHours) + " (" + medianPerson.Name + ")";
+            this.$.min.innerHTML = this._roundup1dp(minPerson.TotalHours) + ' (' + minPerson.Name +')';
+            this.$.max.innerHTML = this._roundup1dp(maxPerson.TotalHours) + ' (' + maxPerson.Name + ')';
+            this.$.median.innerHTML = this._roundup1dp(medianPerson.TotalHours) + ' (' + medianPerson.Name + ')';
             this.$.mean.innerHTML = this._roundup1dp(this.teamData.AverageHours);
             this.$.total.innerHTML = this._roundup1dp(this.teamData.TotalHours);
           }

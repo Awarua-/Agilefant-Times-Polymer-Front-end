@@ -57,7 +57,7 @@
         computeTabs: function(data, team) {
           return data[team - 1].Sprints;
         },
-        sprintChanged: function(event) {
+        sprintChanged: function() {
           var app = document.querySelector('#app');
           app.dispatchEvent(app.sprintChangedEvent);
         }

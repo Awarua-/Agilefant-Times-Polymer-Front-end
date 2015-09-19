@@ -51,15 +51,15 @@
           this.$.form.submit();
           this._clearFields();
         },
-        _handleResponse: function(event, detail) {
-          document.querySelector("#personAjax").generateRequest();
+        _handleResponse: function() {
+          document.querySelector('#personAjax').generateRequest();
         },
         _handleError: function(event, detail) {
-          if (detail.request.xhr.status == 401) {
-            this._showError("usercode or password was incorrect, try again");
+          if (detail.request.xhr.status === 401) {
+            this._showError('usercode or password was incorrect, try again');
           }
           else {
-            this._showError("Something went wrong, try again later");
+            this._showError('Something went wrong, try again later');
           }
         },
         _showError: function(message) {

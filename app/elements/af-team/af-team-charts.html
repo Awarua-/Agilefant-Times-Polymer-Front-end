@@ -66,13 +66,13 @@
          * @returns number rounded to 1dp or less.
          */
         _roundup1dp: function(number) {
-          return +(Math.round(number + "e+1") + "e-1");
+          return +(Math.round(number + 'e+1') + 'e-1');
         },
 
-        _updateData: function(newValue, oldValue) {
-          if (this.teamData != null) {
+        _updateData: function() {
+          if (this.teamData !== null) {
             for (var i = 0; i < this.teamData.Hours.length; i++) {
-              if (this.chartLabels[i] != this.teamData.Hours[i].Name) {
+              if (this.chartLabels[i] !== this.teamData.Hours[i].Name) {
                 this.chartLabels[i] = this.teamData.Hours[i].Name;
               }
               this.chartData[0][i] = this._roundup1dp(this.teamData.Hours[i].TotalHours);
@@ -82,7 +82,7 @@
         },
 
         _updateCharts: function() {
-          if (this.route == 'team') {
+          if (this.route === 'team') {
             this.$.chart.updateChart();
             this.$.chartR.updateChart();
           }

@@ -121,14 +121,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <div class="content layout vertical center">
           <paper-progress id="progress"></paper-progress>
           <iron-pages attr-for-selected="data-route" selected="{{route}}" class="">
+
             <section data-route="team">
               <af-team-statistics team-data="[[currentTeamData]]"></af-team-statistics>
               <af-team-charts route="[[route]]" team-data="[[currentTeamData]]"></af-team-charts>
-              <af-team-person-charts route="{{route}}" team-data="[[teamList]]" sprint-id="[[sprintId]]" team-id="[[teamId]]"></af-team-person-charts>
+              <af-team-person-charts route="{{route}}" all-teams-data="[[teamList]]" sprint-id="[[sprintId]]" team-id="[[teamId]]" current-team-data="[[currentTeamData]]"></af-team-person-charts>
             </section>
 
             <section data-route="person">
-              <af-person id="personView" person-data="[[currentPersonData]]" sprint-id="[[sprintId]]" team-id="[[teamId]]" teams-data="[[teamList]]"></af-person>
+              <af-person id="personView" person-data="[[currentPersonData]]" sprint-id="[[sprintId]]" team-id="{{teamId}}" teams-data="[[teamList]]"></af-person>
             </section>
 
             <section data-route="login">
