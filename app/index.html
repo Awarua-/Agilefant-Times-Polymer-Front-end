@@ -64,7 +64,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <template is="dom-bind" id="app">
 
     <iron-ajax auto
-               url="http://times.sws.nz/rest/teams"
+               url="/rest/teams"
                handle-as="json"
                last-response="{{teamList}}"></iron-ajax>
 
@@ -222,7 +222,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       else {
         computedSprintId = ''
       }
-      return 'http://times.sws.nz/rest/' + teamId + '/sprint/summary/'+ computedSprintId;
+      return '/rest/' + teamId + '/sprint/summary/'+ computedSprintId;
     };
 
     app.addEventListener('personBeginLoading', function(event) {
@@ -255,7 +255,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return;
       }
       var computedSprintId = parseInt(sprintId) + 1;
-      return 'http://times.sws.nz/rest/' + personId + '/sprint/'+ computedSprintId;
+      return '/rest/' + personId + '/sprint/'+ computedSprintId;
     };
 
     app.handleResponse = function(event, detail) {
