@@ -12,7 +12,7 @@
     <paper-material elevation="1" class="layout center">
       <p class="paper-font-headline">Opps looks like you don't have access to this data</p>
       <p class="paper-font-subhead">Login using your Agilefant credentials</p>
-      <form id="form" is="iron-form" method="post" action="http://localhost/rest/login" on-iron-form-response="_handleResponse" on-iron-form-error="_handleError">
+      <form id="form" is="iron-form" method="post" action="/rest/login" on-iron-form-response="_handleResponse" on-iron-form-error="_handleError">
         <p class="warning paper-font-body1">[[errorMessage]]</p>
         <paper-input id="userNameInput" type="text" name="username" label="UserCode"></paper-input>
         <paper-input id="passwordInput" type="password" name="password" label="Password"></paper-input>
