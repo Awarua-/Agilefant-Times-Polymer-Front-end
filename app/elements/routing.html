@@ -21,8 +21,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/team/:id', function (data) {
-      app.teamId = data.params.id;
       app.route = 'team';
+      app.teamId = data.params.id;
       app.dispatchEvent(app.teamBeginLoadingEvent);
     });
 
@@ -35,8 +35,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     page('/person/:id', function(data) {
-      app.personId = data.params.id;
       app.route = 'person';
+      app.personId = data.params.id;
       app.dispatchEvent(app.personBeginLoadingEvent);
     });
 

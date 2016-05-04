@@ -7,24 +7,31 @@
       box-sizing: border-box;
     }
 
+    #chart {
+        width: 100%;
+      @apply(--layout-flex-auto);
+    }
+
+    #chartR {
+        width: 100%;
+      @apply(--layout-flex-auto);
+    }
+
+    paper-material {
+      @apply(--layout-vertical);
+      @apply(--layout-center);
+    }
+
+    .spacing {
+      height: 3rem;
+    }
+
   </style>
   <template id="charts">
-    <paper-material elevation="1" class="layout center vertical">
-      <chart-bar id="chart"
-                  width="900"
-                  height="300"
-                  labels="{{chartLabels}}"
-                  values="{{chartData}}"
-                 colors='["3, 169, 244"]'>
-      </chart-bar>
-      <chart-radar
-        id="chartR"
-        width="450"
-        height="450"
-        labels="{{chartLabels}}"
-        values="{{chartData}}"
-        colors='["3, 169, 244"]'>
-      </chart-radar>
+    <paper-material elevation="1">
+      <chart-bar id="chart" data="[[data]]"></chart-bar>
+      <span class="spacing"></span>
+      <chart-radar id="chartR" data="[[data]]"></chart-radar>
     </paper-material>
   </template>
 
@@ -39,20 +46,21 @@
             notify: false,
             observer: '_updateData'
           },
-          chartData: {
-            type: Array,
+          data: {
+            type: Object,
             value: function() {
-              return [
-                []
-              ];
+                return {
+                  datasets: [
+                    {
+                        label: "Hours per person",
+                         fillColor: "rgba(3, 169, 244, 0.7)",
+                        data:[]
+                    }
+                ],
+                labels: []
+                };
             }
-          },
-          chartLabels: {
-            type: Array,
-            value: function () {
-              return [];
-            }
-          },
+        },
           route: {
             type: String,
             notify: false,
@@ -71,11 +79,11 @@
 
         _updateData: function() {
           if (this.teamData !== null) {
+            this.data.datasets[0].data = [];
+            this.data.labels = [];
             for (var i = 0; i < this.teamData.Hours.length; i++) {
-              if (this.chartLabels[i] !== this.teamData.Hours[i].Name) {
-                this.chartLabels[i] = this.teamData.Hours[i].Name;
-              }
-              this.chartData[0][i] = this._roundup1dp(this.teamData.Hours[i].TotalHours);
+              this.data.labels[i] = this.teamData.Hours[i].Name;
+              this.data.datasets[0].data[i] = this._roundup1dp(this.teamData.Hours[i].TotalHours);
             }
             this._updateCharts();
           }

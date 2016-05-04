@@ -11,6 +11,14 @@
   .selectable {
     cursor: pointer;
   }
+
+  .teamMenuItem {
+    @apply(--layout-horizontal)
+  }
+
+    /*paper-item {*/
+      /*@apply(--layout-flex)*/
+    /*}*/
   </style>
   <template>
 
@@ -23,13 +31,7 @@
     <paper-menu class="list" attr-for-selected="data-route" selected="[[route]]">
       <template is="dom-repeat" items="{{teams}}" as="team">
         <paper-submenu attr-for-selected="data-route" selected="[[route]]">
-          <paper-icon-item></paper-icon-item>
-          <paper-item class="menu-trigger">
-            <a data-route="team" href="{{setTeamRoute('team/', team.Id)}}">
-              <iron-icon icon="social:group"></iron-icon>
-            </a>
-            <span class="selectable">[[team.Name]]</span>
-          </paper-item>
+          <a class="menu-trigger" data-route="team" href="{{setTeamRoute('team/', team.Id)}}">[[team.Name]]</a>
           <paper-menu class="menu-content" on-click='setTeam'>
             <template is="dom-repeat" items="{{team.Members}}" as="person">
               <a data-route="person" href="{{setPersonRoute('person/', person.initials)}}">
@@ -52,8 +54,7 @@
 
         properties: {
           teams: {
-            type: Array,
-            notify: true
+            type: Array
           },
           personId: {
             type: String,
@@ -65,6 +66,9 @@
           },
           lastPersonId: {
             type:String
+          },
+          personData: {
+            type: Object
           }
         },
         setTeamRoute: function(url, param) {
@@ -82,16 +86,8 @@
             app.dispatchEvent(app.personEndLoadingEvent);
           }
           this.lastPersonId = this.personId;
-          //Could be doing some functional programming magic here, but its late and I don't really care atm.
-          for (var i = 0; i < this.teams.length; i++) {
-            for (var j = 0; j < this.teams[i].Members.length; j++) {
-              if (this.teams[i].Members[j].initials === this.personId) {
-                if (this.teamId !== this.teams[i].Id) {
-                  this.teamId = this.teams[i].Id;
-                }
-                break;
-              }
-            }
+          if (this.personData) {
+            this.teamId = this.personData.TeamId;
           }
         }
       });

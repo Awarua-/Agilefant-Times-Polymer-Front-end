@@ -53,18 +53,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- will be replaced with elements/elements.vulcanized.html -->
   <link rel="import" href="elements/elements.html">
   <!-- endreplace-->
-  <style is="custom-style" include="shared-styles"></style>
+  <style is="custom-style" include="shared-styles">
+
+    body {
+      @apply(--layout-vertical);
+    }
+
+    #title {
+      @apply(--layout-horizontal);
+      @apply(--layout-center);
+    }
+
+    #content{
+      @apply(--layout-vertical);
+      @apply(--layout-center);
+    }
+
+  </style>
 
 
 </head>
 
-<body unresolved class="fullbleed layout vertical">
+<body unresolved class="fullbleed">
 
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
 
     <iron-ajax auto
-               url="/rest/teams"
+               url="http://localhost/rest/teams"
                handle-as="json"
                last-response="{{teamList}}"></iron-ajax>
 
@@ -85,7 +101,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <paper-drawer-panel id="paperDrawerPanel" force-narrow>
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
-        <af-drawer teams="[[teamList]]" person-id="{{personId}}" team-id="{{teamId}}"></af-drawer>
+        <af-drawer teams="[[teamList]]" person-id="{{personId}}" team-id="{{teamId}}" person-data="[[currentPersonData]]"></af-drawer>
 
       </paper-scroll-header-panel>
 
@@ -95,11 +111,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <!-- Main Toolbar -->
         <paper-toolbar id="mainToolbar" class="tall">
           <paper-icon-button class="top" id="paperToggle" icon="menu" paper-drawer-toggle></paper-icon-button>
-          <af-toolbar class="flex" sprint-id="{{sprintId}}" data="[[teamList]]" team="[[teamId]]"></af-toolbar>
+          <af-toolbar class="flex" sprint-id="{{sprintId}}" team-id="[[teamId]]" data="[[_generateTeamMap(teamList)]]"></af-toolbar>
           <!-- Toolbar icons -->
-          <!--<paper-icon-button icon="refresh"></paper-icon-button>-->
 
-          <div class="bottom bottom-container center horizontal layout" scrollable>
+          <div class="bottom bottom-container" id="title" scrollable>
             <iron-pages attr-for-selected="data-route" selected="{{route}}" class="bottom-title">
               <section data-route="team" class="bottom-title paper-font-subhead">
                 <div class="app-name">[[currentTeamData.TeamName]]</div>
@@ -118,18 +133,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         </paper-toolbar>
 
         <!-- Main Content -->
-        <div class="content layout vertical center">
+        <div class="content" id="content">
           <paper-progress id="progress"></paper-progress>
           <iron-pages attr-for-selected="data-route" selected="{{route}}" class="">
 
             <section data-route="team">
               <af-team-statistics team-data="[[currentTeamData]]"></af-team-statistics>
               <af-team-charts route="[[route]]" team-data="[[currentTeamData]]"></af-team-charts>
-              <af-team-person-charts route="{{route}}" all-teams-data="[[teamList]]" sprint-id="[[sprintId]]" team-id="[[teamId]]" current-team-data="[[currentTeamData]]"></af-team-person-charts>
+              <af-team-person-charts route="[[route]]" team-id="{{teamId}}" teams-data="[[_generateTeamMap(teamList)]]" sprint-id="[[sprintId]]" current-team-data="[[currentTeamData]]"></af-team-person-charts>
             </section>
 
             <section data-route="person">
-              <af-person id="personView" person-data="[[currentPersonData]]" sprint-id="[[sprintId]]" team-id="{{teamId}}" teams-data="[[teamList]]"></af-person>
+              <af-person id="personView" person-data="[[currentPersonData]]" sprint-id="[[sprintId]]" team-id="{{teamId}}" teams-data="[[_generateTeamMap(teamList)]]"></af-person>
             </section>
 
             <section data-route="login">
@@ -210,6 +225,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.stopProgress = function() {
       app.maxRepeat = 0;
     };
+    app._generateTeamMap = function(teamsData) {
+      var map = {};
+      for (var i = 0; i < teamsData.length; i++) {
+        map[teamsData[i].Id] = teamsData[i];
+      }
+      return map;
+    };
     app._generateTeamUrl = function(teamId, sprintId) {
       var computedSprintId;
       if (app.ignoreRequest) {
@@ -222,7 +244,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       else {
         computedSprintId = ''
       }
-      return '/rest/' + teamId + '/sprint/summary/'+ computedSprintId;
+      return 'http://localhost/rest/' + teamId + '/sprint/summary/'+ computedSprintId;
     };
 
     app.addEventListener('personBeginLoading', function(event) {
@@ -251,11 +273,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     });
 
     app._generatePersonUrl = function(personId, sprintId) {
-      if (sprintId == null || personId == null) {
+      if (sprintId == null || personId == null || app.route !== "person") {
         return;
       }
       var computedSprintId = parseInt(sprintId) + 1;
-      return '/rest/' + personId + '/sprint/'+ computedSprintId;
+      return 'http://localhost/rest/' + personId + '/sprint/'+ computedSprintId;
     };
 
     app.handleResponse = function(event, detail) {

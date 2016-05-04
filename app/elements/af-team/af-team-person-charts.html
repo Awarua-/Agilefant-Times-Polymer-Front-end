@@ -8,19 +8,13 @@
     }
 
     #lineChart {
-      display: none;
+      width: 100%;
+      @apply(--layout-flex-auto);
     }
 
-    #loginButton {
-      display: none;
-    }
-
-    #errorMessage {
-      display: none;
-    }
-
-    #legend {
-      display: none;
+    paper-material {
+      @apply(--layout-vertical);
+      @apply(--layout-center);
     }
 
   </style>
@@ -31,18 +25,8 @@
                on-response="handlePersonChartResponse"
                on-error="handleError"></iron-ajax>
 
-    <paper-material id="container" elevation="1" class="layout center vertical">
-      <p id="errorMessage" class="paper-font-title">[[errorMessage]]</p>
-      <paper-button id="loginButton" raised on-click="handleClick">Login</paper-button>
-      <chart-line id="lineChart"
-                 width="0"
-                 height="0"
-                 labels="{{chartLabels}}"
-                 values="{{chartData}}"
-                 colors="{{colours}}"
-                  legend>
-      </chart-line>
-      <div id="legend"></div>
+    <paper-material elevation="1">
+      <chart-line id="lineChart" data=[[data]] legend legend-layout="bottom" legend-style="[[legendStyle]]"></chart-line>
     </paper-material>
   </template>
 
@@ -52,7 +36,7 @@
         is: 'af-team-person-charts',
 
         properties: {
-          allTeamsData: {
+          teamsData: {
             type: Object,
             notify: false
           },
@@ -76,26 +60,52 @@
             type: String,
             notify: true
           },
-          chartData: {
-            type: Array
-          },
-          chartLabels: {
-            type: Array,
-            value: function () {
-              return [];
+          data: {
+            type: Object,
+            value: function() {
+                return {
+                  datasets: [],
+                  labels: []
+                };
             }
           },
-          errorMessage: String,
+          legendStyle: {
+            type: Object,
+              value: function() {
+                return {
+                    boxStyle: [
+                    {
+                      property: "borderRadius",
+                      value: "10px"
+                    }
+                  ]
+                }
+              }
+
+          },
           colours: {
             type: Array,
             /* jshint ignore:start */
             value: function() {
-              return ["253,180,92",
-              "247,70,74",
-                "70,191,189",
-                "148,159,177",
-                "77,83,96",
-                "50,210,100"];
+              return ["rgba(244,67,54 ,0.5)",
+              "rgba(63,81,181 ,0.5)",
+              "rgba(0,137,123 ,0.5)",
+              "rgba(255,235,59 ,0.5)",
+              "rgba(121,85,72 ,0.5)",
+              "rgba(233,30,99 ,0.5)",
+              "rgba(33,150,243 ,0.5)",
+              "rgba(76,175,80 ,0.5)",
+              "rgba(255,193,7 ,0.5)",
+              "rgba(158,158,158 ,0.5)",
+              "rgba(156,39,176 ,0.5)",
+              "rgba(3,169,244 ,0.5)",
+              "rgba(139,195,74 ,0.5)",
+              "rgba(255,152,0 ,0.5)",
+              "rgba(96,125,139 ,0.5)",
+              "rgba(103,58,183 ,0.5)",
+              "rgba(0,188,212 ,0.5)",
+              "rgba(205,220,57 ,0.5)",
+              "rgba(255,87,34 ,0.5)"];
             }
             /* jshint ignore:end */
           },
@@ -115,19 +125,18 @@
             return;
           }
           var computedSprintId = parseInt(sprintId) + 1;
-          return '/rest/' + personId + '/sprint/'+ computedSprintId;
+          return 'http://localhost/rest/' + personId + '/sprint/'+ computedSprintId;
         },
 
         handlePersonChartResponse: function(event, detail) {
           if (this.route !== 'person') {
             var data = detail.response;
-            var personIndex = this._getPersonIndex(data.UserCode);
             this.responseCount++;
-            if (this.responseCount === this.allTeamsData[this.teamId - 1].Members.length) {
-              this._drawChartLine(data, personIndex, this.showChart.bind(this));
+            if (this.responseCount === this.teamsData[this.teamId].Members.length) {
+              this._drawChartLine(data, this.responseCount, this._onFinishedChartLoading.bind(this));
             }
             else {
-              this._drawChartLine(data, personIndex, null);
+              this._drawChartLine(data, this.responseCount, null);
             }
           }
         },
@@ -138,31 +147,7 @@
               var app = document.querySelector('#app');
               app.dispatchEvent(app.teamEndLoadingEvent);
             }
-            this._showAccessError();
           }
-        },
-
-        _showAccessError: function(){
-          this.errorMessage = 'You do not have permission to access this data. If you are a member of this team you can login below';
-          this.$.errorMessage.style.display = 'inline';
-          this.$.loginButton.style.display = 'inline';
-        },
-
-        handleClick: function() {
-          this.route = 'login';
-        },
-
-        _getPersonIndex: function(userCode) {
-          var team = this.allTeamsData[this.teamId - 1];
-          for(var i = 0; i < team.Members.length; i++) {
-            if (team.Members[i].initials === userCode) {
-              return i;
-            }
-          }
-        },
-
-        _getPersonName: function(personIndex) {
-          return this.allTeamsData[this.teamId - 1].Members[personIndex].Name;
         },
 
         /**
@@ -174,14 +159,22 @@
           return +(Math.round(number + 'e+1') + 'e-1');
         },
 
+        _buildDataSet: function(index) {
+            return {
+                    label: "",
+                    fillColor: this.colours[index % this.colours.length],
+                    pointColor: this.colours[index % this.colours.length],
+                    data:[]
+                }
+        },
+
         _drawChartLine: function(data, personIndex, callback) {
-          this.async(function () {
           if (data !== null) {
             var currentData;
 
             // Offset the start date of taking data from the persons daily hours array.
             // This is because sometimes Agilefant will return data from previous sprints.
-            var sprintEndDate = new Date(this.allTeamsData[this.teamId - 1].Sprints[this.sprintId].EndDate);
+            var sprintEndDate = new Date(this.teamsData[this.teamId].Sprints[this.sprintId].EndDate);
             var today = new Date();
             var adjustedEndDate;
             if (sprintEndDate > today) {
@@ -191,35 +184,32 @@
               adjustedEndDate = sprintEndDate;
             }
 
-            var sprintStartDate = new Date(this.allTeamsData[this.teamId - 1].Sprints[this.sprintId].StartDate);
+            var sprintStartDate = new Date(this.teamsData[this.teamId].Sprints[this.sprintId].StartDate);
             var currentNumberOfSprintDays = Math.round((adjustedEndDate - sprintStartDate) / (1000 * 60 * 60 * 24));
             var dataOffset = currentNumberOfSprintDays - (data.DailyHours.length - 1);
-
             var nonAdjustedSprintLengthInDays = data.DailyHours.length - 1;
-            if (this.chartLabels[nonAdjustedSprintLengthInDays - dataOffset] !== this._getDay(nonAdjustedSprintLengthInDays)) {
+            if (this.data.labels[nonAdjustedSprintLengthInDays - dataOffset] !== this._getDay(nonAdjustedSprintLengthInDays)) {
               for (var i = dataOffset; i < data.DailyHours.length; i++) {
-                this.chartLabels[i - dataOffset] = this._getDay(i);
+                this.splice("data.labels", i - dataOffset, 0, this._getDay(i));
               }
             }
-            this.chartData[personIndex].seriesLabel = this._getPersonName(personIndex);
+
+            var dataset = this._buildDataSet(personIndex);
+            dataset.label = data.Name;
 
             for (var j = dataOffset; j < data.DailyHours.length; j++) {
               currentData = this._roundup1dp(data.DailyHours[j]);
-              this.chartData[personIndex].data[j - dataOffset] = currentData;
+              dataset.data[j - dataOffset] = currentData;
             }
+            this.push("data.datasets", dataset);
+
             if (callback !== null) {
               callback();
             }
           }
-          }, null, 0);
         },
 
-        showChart: function() {
-          this.$.lineChart.width = 900;
-          this.$.lineChart.height = 300;
-          this.$.lineChart.style.display = 'inline';
-          this.$.legend.style.display = 'inline';
-          this.$.lineChart.updateChart();
+        _onFinishedChartLoading: function() {
           if (this.route === 'team') {
             var app = document.querySelector('#app');
             app.dispatchEvent(app.teamEndLoadingEvent);
@@ -228,36 +218,25 @@
 
         _updateData: function() {
           if (this.currentTeamData !== null && this.route === 'team') {
-            this.chartLabels = [];
             this.clearChartData();
             this.responseCount = 0;
-            this.$.lineChart.width = 0;
-            this.$.lineChart.height = 0;
-            this.$.lineChart.style.display = 'none';
-            this.$.legend.style.display = 'none';
-            this.$.loginButton.style.display = 'none';
-            this.$.errorMessage.style.display = 'none';
-            var team = this.allTeamsData[this.teamId - 1];
-
-            for (var i = 0; i < team.Members.length; i++) {
-              this.personId = team.Members[i].initials;
+            for (var i = 0; i < this.teamsData[this.teamId].Members.length; i++) {
+              this.personId = this.teamsData[this.teamId].Members[i].initials;
               this.$.ajax.generateRequest();
             }
           }
         },
 
         clearChartData: function () {
-          this.chartData = [];
-          for (var i = 0; i < this.allTeamsData[this.teamId -1].Members.length; i++) {
-            /* jshint ignore:start */
-            this.chartData.push({"seriesLabel":"", "data":[]});
-            /* jshint ignore:end */
-          }
+            this.data = {
+              datasets: [],
+              labels: []
+          };
         },
 
         _getDay: function(index) {
-          var date = new Date(this.allTeamsData[this.teamId - 1].Sprints[this.sprintId].StartDate);
-          date.setDate(date.getDate() + index + 1);
+          var date = new Date(this.teamsData[this.teamId].Sprints[this.sprintId].StartDate);
+          date.setDate(date.getDate() + index);
           var day = date.getDate();
           var month = date.getMonth() + 1;
           var year = date.getFullYear();

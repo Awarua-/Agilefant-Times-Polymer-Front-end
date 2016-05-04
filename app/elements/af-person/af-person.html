@@ -42,18 +42,23 @@
     #container {
       display:none;
     }
+
+    #chart {
+      @apply(--layout-flex-auto);
+      width:100%;
+    }
+
+    paper-material {
+      @apply(--layout-center);
+      @apply(--layout-vertical);
+
+    }
   </style>
   <template>
 
     <div id="container">
-    <paper-material elevation="1" class="layout center vertical">
-      <chart-line id="chart"
-                 width="900"
-                 height="300"
-                 labels="{{chartLabels}}"
-                 values="{{chartData}}"
-                 colors='["3, 169, 244"]'>
-      </chart-line>
+    <paper-material elevation="1">
+      <chart-line id="chart" data="[[data]]"></chart-line>
       <table>
         <thead>
         <tr>
@@ -66,13 +71,13 @@
         <tr>
           <td id="total" class="stats first">[[_roundup1dp(personData.TotalHours)]]</td>
           <td id="avg" class="stats">[[_roundup1dp(personData.AverageHours)]]</td>
-          <td id="long" class="stats"></td>
+          <td id="long" class="stats">None</td>
         </tr>
         </tbody>
       </table>
     </paper-material>
 
-    <paper-material elevation="1" class="layout center vertical">
+    <paper-material elevation="1">
       <table>
         <thead>
         <tr>
@@ -91,7 +96,7 @@
       </table>
     </paper-material>
 
-    <paper-material elevation="1" class="layout center vertical">
+    <paper-material elevation="1">
       <table>
         <thead>
         <tr>
@@ -133,34 +138,23 @@
           personData: {
             type: Object,
             notify: false,
-            observer: '_updateData'
+            observer: '_updatePerson'
           },
           sprintId: {
             type: String
           },
-          teamId: {
-            type: String,
-            notify: true
-          },
           teamsData: {
             type: Array
           },
-          chartData: {
-            type: Array,
-            value: function() {
-              return [
-                /* jshint ignore:start */
-                {"seriesLabel":"", "data": []}
-                /* jshint ignore:end */
-              ];
-            }
-
+          teamData: {
+            type: Object
           },
-          chartLabels: {
-            type: Array,
-            value: function () {
-              return [];
-            }
+          teamId: {
+            type: Number,
+            notify: true
+          },
+          data: {
+            type: Object
           }
         },
 
@@ -179,28 +173,23 @@
           return +(Math.round(number + 'e+1') + 'e-1');
         },
 
-        _getTeamId: function(){
-          for (var i = 0; i < this.teamsData.length; i++) {
-            for (var j = 0; j < this.teamsData[i].Members.length; j++) {
-              if (this.personData.UserCode === this.teamsData[i].Members[j].initials) {
-                this.teamId = this.teamsData[i].Id;
-                return;
-              }
-            }
+        _updatePerson: function() {
+          if (this.teamId !== this.personData.Id) {
+            this.teamId = this.personData.TeamId;
           }
+          this.teamData = this.teamsData[this.teamId];
+          this._updateData();
         },
 
         _updateData: function() {
           if (this.personData !== null) {
-            this._getTeamId();
             this.clearChartData();
-            this.chartLabels = [];
             var longestDayDate;
             var currentData;
 
             // Offset the start date of taking data from the persons daily hours array.
             // This is because sometimes Agilefant will return data from previous sprints.
-            var sprintEndDate = new Date(this.teamsData[this.teamId - 1].Sprints[this.sprintId].EndDate);
+            var sprintEndDate = new Date(this.teamData.Sprints[this.sprintId].EndDate);
             var today = new Date();
             var adjustedEndDate;
             if (sprintEndDate > today) {
@@ -210,17 +199,16 @@
               adjustedEndDate = sprintEndDate;
             }
 
-            var sprintStartDate = new Date(this.teamsData[this.teamId - 1].Sprints[this.sprintId].StartDate);
+            var sprintStartDate = new Date(this.teamData.Sprints[this.sprintId].StartDate);
             var currentNumberOfSprintDays = Math.round((adjustedEndDate - sprintStartDate) / (1000 * 60 * 60 * 24));
             var dataOffset = currentNumberOfSprintDays - (this.personData.DailyHours.length - 1);
-
             for (var i = dataOffset; i < this.personData.DailyHours.length; i++) {
               currentData = this.personData.DailyHours[i];
               if (currentData === this.personData.LongestDay) {
                 longestDayDate = this._getDay(i);
               }
-              this.chartData[0].data[i -dataOffset] = this._roundup1dp(currentData);
-              this.chartLabels[i - dataOffset] = this._getDay(i);
+              this.data.datasets[0].data[i - dataOffset] = this._roundup1dp(currentData);
+              this.data.labels[i - dataOffset] = this._getDay(i);
             }
             this.$.long.innerHTML = this._roundup1dp(this.personData.LongestDay) + ' (' + longestDayDate + ')';
             this.$.chart.updateChart();
@@ -228,15 +216,21 @@
         },
 
         clearChartData: function () {
-          this.chartData = [];
-          /* jshint ignore:start */
-          this.chartData.push({"seriesLabel":"", "data":[]});
-          /* jshint ignore:end */
+          this.data = {
+            datasets: [
+              {
+                label: "Hours per person",
+                fillColor: "rgba(3, 169, 244, 0.7)",
+                data:[]
+              }
+            ],
+            labels: []
+          };
         },
 
         _getDay: function(index) {
-          var date = new Date(this.teamsData[this.teamId - 1].Sprints[this.sprintId].StartDate);
-          date.setDate(date.getDate() + index + 1);
+          var date = new Date(this.teamData.Sprints[this.sprintId].StartDate);
+          date.setDate(date.getDate() + index);
           var day = date.getDate();
           var month = date.getMonth() + 1;
           var year = date.getFullYear();

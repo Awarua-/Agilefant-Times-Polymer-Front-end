@@ -2,7 +2,7 @@
   "name": "polymer-starter-kit",
   "private": true,
   "dependencies": {
-    "chart-elements": "git://github.com/Awarua-/chart-elements.git",
+    "chart-elements": "Awarua-/chart-elements#v2.0.2",
     "page": "visionmedia/page.js",
     "iron-flex-layout": "PolymerElements/iron-flex-layout",
     "iron-icons": "PolymerElements/iron-icons",
