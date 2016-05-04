@@ -4,8 +4,6 @@ A front end for the [AgilefantTimes](https://github.com/mrkno/AgilefantTimes) re
 Built using Polymer 1.0
 
 This project is based on the [Polymer starter kit](https://github.com/PolymerElements/polymer-starter-kit)
- 
-:sparkles: [Live demo](http://times.sws.nz) :sparkles:
 
 ### Install dependencies
 
